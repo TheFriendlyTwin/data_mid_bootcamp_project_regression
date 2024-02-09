@@ -22,6 +22,7 @@ CREATE TABLE `house_price_data` (
   `sqft_above` int,
   `sqft_basement` int,
   `yr_built` int,
+  `yr_renovated` int,
   `zipcode` int,
   `lat` float,
   `long` float,
@@ -43,7 +44,7 @@ INTO TABLE house_price_data
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
-(id, date, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view, `condition`, grade, sqft_above, sqft_basement, yr_built, zipcode, lat, `long`, sqft_living15, sqft_lot15, price)
+(id, date, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view, `condition`, grade, sqft_above, sqft_basement, yr_built, yr_renovated, zipcode, lat, `long`, sqft_living15, sqft_lot15, price)
 ;
 
 -- 4. Select all the data from table house_price_data to check if the data was imported correctly
@@ -61,10 +62,172 @@ limit 10;
 select count(*) as row_count
 from house_price_data;
 
-/* 7. Now we will try to find the unique values in some of the categorical columns:
+/* 7. Now we will try to find the unique values in some of the categorical columns:*/
 
-	-	What are the unique values in the column bedrooms?
-	-	What are the unique values in the column bathrooms?
-	-	What are the unique values in the column floors?
-	-	What are the unique values in the column condition?
-	-	What are the unique values in the column grade? */
+-- What are the unique values in the column bedrooms?
+select distinct bedrooms from house_price_data
+order by bedrooms;
+
+-- What are the unique values in the column bathrooms?
+select distinct bathrooms from house_price_data
+order by bathrooms;
+
+-- What are the unique values in the column floors?
+select distinct floors from house_price_data
+order by floors;
+
+-- What are the unique values in the column condition?
+select distinct h.condition from house_price_data as h
+order by h.condition;
+
+-- What are the unique values in the column grade?
+select distinct grade from house_price_data
+order by grade;
+
+/* 8.Arrange the data in a decreasing order by the price of the house. Return only the IDs of the top 10 most expensive houses in your data. */
+select * from house_price_data
+order by price desc
+limit 10; -- The most expensive house costs '7700000'
+
+-- 9. What is the average price of all the properties in your data?
+select avg(price) as average_price 
+from house_price_data; -- average price = '541856.8463'
+
+/* 10 In this exercise we will use simple group by to check the properties of some of the categorical variables in our data */
+
+/* 10.1 What is the average price of the houses grouped by bedrooms? 
+The returned result should have only two columns, bedrooms and Average of the prices. 
+Use an alias to change the name of the second column. */
+select bedrooms, round(avg(price),2) as average_price
+from house_price_data
+group by bedrooms
+order by bedrooms; -- A house with one bedroom cost on average '321847.82' and a house with 11 bedrooms costs on average '520000'
+
+/* 10.2 What is the average sqft_living of the houses grouped by bedrooms? 
+The returned result should have only two columns, bedrooms and Average of the sqft_living. 
+Use an alias to change the name of the second column. */
+select bedrooms, round(avg(sqft_living),2) as average_sqft_living
+from house_price_data
+group by bedrooms
+order by bedrooms; -- A house with one bedroom has a living room with an average of '888.58' sqft and a house with 11 bedrooms has a living room with an average of '3000' sqft
+
+/* 10.3 What is the average price of the houses with a waterfront and without a waterfront? 
+The returned result should have only two columns, waterfront and Average of the prices. 
+Use an alias to change the name of the second column.*/
+select waterfront, round(avg(price),2) as average_price
+from house_price_data
+group by waterfront
+order by waterfront; -- A house with no waterfront costs on average'533263.10' and a house with waterfront costs on average '1662524.18'
+
+/* 10.4 Is there any correlation between the columns condition and grade? 
+You can analyse this by grouping the data by one of the variables and then aggregating the results of the other column. 
+Visually check if there is a positive correlation or negative correlation or no correlation between the variables. */
+select h.grade, 
+       sum(case when h.condition = 1 then 1 else 0 end) as count_contidition1,
+       sum(case when h.condition = 2 then 1 else 0 end) as count_contidition2,
+       sum(case when h.condition = 3 then 1 else 0 end) as count_contidition3,
+       sum(case when h.condition = 4 then 1 else 0 end) as count_contidition4,
+       sum(case when h.condition = 5 then 1 else 0 end) as count_contidition5
+from house_price_data h
+group by h.grade
+order by h.grade;
+
+select h.condition, 
+       sum(case when h.grade = 3 then 1 else 0 end) as count_grade3,
+       sum(case when h.grade = 4 then 1 else 0 end) as count_grade4,
+       sum(case when h.grade = 5 then 1 else 0 end) as count_grade5,
+       sum(case when h.grade = 6 then 1 else 0 end) as count_grade6,
+       sum(case when h.grade = 7 then 1 else 0 end) as count_grade7,
+       sum(case when h.grade = 8 then 1 else 0 end) as count_grade8,
+       sum(case when h.grade = 9 then 1 else 0 end) as count_grade9,
+       sum(case when h.grade = 10 then 1 else 0 end) as count_grade10,
+       sum(case when h.grade = 11 then 1 else 0 end) as count_grade11,
+       sum(case when h.grade = 12 then 1 else 0 end) as count_grade12,
+       sum(case when h.grade = 13 then 1 else 0 end) as count_grade13
+from house_price_data h
+group by h.condition
+order by h.condition;
+
+/* In a correlation table, when the higher values are centered or concentrated along the diagonal (from the top-left to bottom-right), 
+it suggests a positive correlation between the variables. This scenario typically indicates that when one variable increases, 
+the other variable also tends to increase, and when one variable decreases, the other variable also tends to decrease. 
+The stronger the positive correlation, the more concentrated the higher values will be along the diagonal.
+
+Conversely, if the lower values are centered and the higher values are pushed towards the edges of the table, 
+it suggests a negative correlation, indicating that when one variable increases, the other variable tends to decrease, and vice versa.
+
+In thise case we are facing a positive correlation: when the grade increases the the condition thends to increase and when the grade decreases the condition tends to decrease. */
+
+
+
+
+/* 11. One of the customers is only interested in the following houses:
+	- Number of bedrooms either 3 or 4
+	- Bathrooms more than 3
+	- One Floor
+	- No waterfront
+	- Condition should be 3 at least
+	- Grade should be 5 at least
+	- Price less than 300000 */
+select * from house_price_data as h
+where (bedrooms = 3 or bedrooms = 4) and floors = 1 and waterfront = 0 and h.condition >= 3 and grade >= 5 and price < 300000
+order by price;
+ 
+ /* 12. Your manager wants to find out the list of properties whose prices are twice more than the average of all the properties in the database. 
+ Write a query to show them the list of such properties. You might need to use a sub query for this problem.*/
+ 
+ -- First get average of prices of all proporties
+ select avg(price) as average_price 
+from house_price_data;
+
+-- Filter the proporties whose price is double of the average calculated on the previous query
+select * from house_price_data
+where price >= 2*(select avg(price) as average_price from house_price_data)
+order by price;
+
+/* 13. Since this is something that the senior management is regularly interested in, create a view of the same query. */
+create view twice_higher_than_average_proporties as
+select * from house_price_data
+where price >= 2*(select avg(price) as average_price from house_price_data)
+order by price;
+
+select * from twice_higher_than_average_proporties;
+
+/* 14. Most customers are interested in properties with three or four bedrooms. 
+What is the difference in average prices of the properties with three and four bedrooms? */
+
+-- First we calculate the average price for each type of property
+select avg(price) as three_bedroom_avg_price from house_price_data
+where bedrooms = 3; -- A three bedroom property costs in average '467795.76'
+
+select avg(price) as four_bedroom_avg_price from house_price_data
+where bedrooms = 4; -- A four bedroom property costs in average '636317.92'
+
+select 
+	(select avg(price) as four_bedroom_avg_price from house_price_data
+	where bedrooms = 4)
+    -
+	(select avg(price) as three_bedroom_avg_price from house_price_data
+	where bedrooms = 3) as avg_price_difference; 
+-- The difference in average prices of the properties with three and four bedrooms is of '168522.1530'
+
+/* 15. What are the different locations where properties are available in your database? (distinct zip codes)*/
+select distinct zipcode
+from house_price_data;
+
+select count(distinct zipcode) as locations_count
+from house_price_data; -- The properties are available in 70 different locations
+
+/* 16. Show the list of all the properties that were renovated. */
+select * from house_price_data
+where yr_renovated <> 0;
+
+/*17. Provide the details of the property that is the 11th most expensive property in your database. */
+select * from house_price_data
+order by price desc
+limit 11;
+
+select * from house_price_data
+order by price desc
+limit 10, 1;
+

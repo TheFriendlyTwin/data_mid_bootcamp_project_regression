@@ -22,13 +22,15 @@ CREATE TABLE `house_price_data` (
   `sqft_above` int,
   `sqft_basement` int,
   `yr_built` int,
-  `yr_renovated` int,
   `zipcode` int,
   `lat` float,
   `long` float,
   `sqft_living15` int,
   `sqft_lot15` int,
   `price` int,
+  `renovated` int,
+  `major_city` text,
+  `state` text,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -44,7 +46,7 @@ INTO TABLE house_price_data
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
-(id, date, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view, `condition`, grade, sqft_above, sqft_basement, yr_built, yr_renovated, zipcode, lat, `long`, sqft_living15, sqft_lot15, price)
+(id, date, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view, `condition`, grade, sqft_above, sqft_basement, yr_built, zipcode, lat, `long`, sqft_living15, sqft_lot15, price, renovated, major_city, state)
 ;
 
 -- 4. Select all the data from table house_price_data to check if the data was imported correctly
@@ -159,8 +161,6 @@ it suggests a negative correlation, indicating that when one variable increases,
 In thise case we are facing a positive correlation: when the grade increases the the condition thends to increase and when the grade decreases the condition tends to decrease. */
 
 
-
-
 /* 11. One of the customers is only interested in the following houses:
 	- Number of bedrooms either 3 or 4
 	- Bathrooms more than 3
@@ -186,6 +186,8 @@ where price >= 2*(select avg(price) as average_price from house_price_data)
 order by price;
 
 /* 13. Since this is something that the senior management is regularly interested in, create a view of the same query. */
+drop view twice_higher_than_average_proporties;
+
 create view twice_higher_than_average_proporties as
 select * from house_price_data
 where price >= 2*(select avg(price) as average_price from house_price_data)
@@ -220,7 +222,7 @@ from house_price_data; -- The properties are available in 70 different locations
 
 /* 16. Show the list of all the properties that were renovated. */
 select * from house_price_data
-where yr_renovated <> 0;
+where renovated = 1;
 
 /*17. Provide the details of the property that is the 11th most expensive property in your database. */
 select * from house_price_data
@@ -231,3 +233,66 @@ select * from house_price_data
 order by price desc
 limit 10, 1;
 
+/* Extra Questions*/
+
+-- What is the average price grouped by zipcode (location)
+select zipcode, round(avg(price),2) as average_price_location 
+from house_price_data
+group by zipcode
+order by average_price_location desc;
+
+-- For each zipcode (location) get the max and min price
+select zipcode, max(price) max_price, min(price) min_price
+from house_price_data
+group by zipcode
+order by max_price desc;
+
+-- What are the zipcodes (locations) with the highest and lowest average of prices
+with avg_price_location as
+(
+	select zipcode, round(avg(price),2) as average_price_location 
+	from house_price_data
+	group by zipcode
+)
+select *
+from avg_price_location
+where average_price_location = (select max(average_price_location) from avg_price_location) or 
+		average_price_location = (select min(average_price_location) from avg_price_location)
+order by average_price_location desc;
+
+
+-- What are the different cities where properties are available in your database? (distinct major cites)
+select distinct major_city from house_price_data;
+select count(distinct major_city) major_city_count from house_price_data;
+
+-- What is the average price grouped by major city
+select major_city, round(avg(price),2) average_price_city from house_price_data
+group by major_city
+order by average_price_city desc;
+
+
+-- For each major city get the max and min price
+select major_city, max(price) max_price, min(price) min_price
+from house_price_data
+group by major_city
+order by max_price desc;
+
+-- What are the major cities with the highest and lowest average of prices
+with avg_price_city as
+(
+	select major_city, round(avg(price),2) as average_price_city 
+	from house_price_data
+	group by major_city
+)
+select *
+from avg_price_city
+where average_price_city = (select max(average_price_city) from avg_price_city) or 
+		average_price_city = (select min(average_price_city) from avg_price_city)
+order by average_price_city desc;
+
+-- What are the cheapeast and most expensive house in our database
+select max(price) max_price, min(price) min_price 
+from house_price_data;
+
+select * from house_price_data
+where price = (select max(price) from house_price_data) or price = (select min(price) from house_price_data);

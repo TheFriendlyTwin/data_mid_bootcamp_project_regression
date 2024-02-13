@@ -103,15 +103,15 @@ Use an alias to change the name of the second column. */
 select bedrooms, round(avg(price),2) as average_price
 from house_price_data
 group by bedrooms
-order by bedrooms; -- A house with one bedroom cost on average '321847.82' and a house with 11 bedrooms costs on average '520000'
+order by average_price desc; -- A house with one bedroom cost on average '321847.82' and a house with 11 bedrooms costs on average '520000'
 
 /* 10.2 What is the average sqft_living of the houses grouped by bedrooms? 
 The returned result should have only two columns, bedrooms and Average of the sqft_living. 
 Use an alias to change the name of the second column. */
-select bedrooms, round(avg(sqft_living),2) as average_sqft_living
+select bedrooms, round(avg(sqft_living),2) as average_sqft_living, round(avg(sqft_living15),2) as average_sqft_living15
 from house_price_data
 group by bedrooms
-order by bedrooms; -- A house with one bedroom has a living room with an average of '888.58' sqft and a house with 11 bedrooms has a living room with an average of '3000' sqft
+order by average_sqft_living15 desc; -- A house with one bedroom has a living room with an average of '888.58' sqft and a house with 11 bedrooms has a living room with an average of '3000' sqft
 
 /* 10.3 What is the average price of the houses with a waterfront and without a waterfront? 
 The returned result should have only two columns, waterfront and Average of the prices. 
@@ -119,7 +119,7 @@ Use an alias to change the name of the second column.*/
 select waterfront, round(avg(price),2) as average_price
 from house_price_data
 group by waterfront
-order by waterfront; -- A house with no waterfront costs on average'533263.10' and a house with waterfront costs on average '1662524.18'
+order by waterfront; -- A house with no waterfront costs on average '533263.10' and a house with waterfront costs on average '1662524.18'
 
 /* 10.4 Is there any correlation between the columns condition and grade? 
 You can analyse this by grouping the data by one of the variables and then aggregating the results of the other column. 
@@ -158,7 +158,7 @@ The stronger the positive correlation, the more concentrated the higher values w
 Conversely, if the lower values are centered and the higher values are pushed towards the edges of the table, 
 it suggests a negative correlation, indicating that when one variable increases, the other variable tends to decrease, and vice versa.
 
-In thise case we are facing a positive correlation: when the grade increases the the condition thends to increase and when the grade decreases the condition tends to decrease. */
+In thise case we are facing a positive correlation: when the grade increases the condition thends to increase and when the grade decreases the condition tends to decrease, and vice versa */
 
 
 /* 11. One of the customers is only interested in the following houses:
@@ -177,7 +177,7 @@ order by price;
  Write a query to show them the list of such properties. You might need to use a sub query for this problem.*/
  
  -- First get average of prices of all proporties
- select avg(price) as average_price 
+select avg(price) as average_price 
 from house_price_data;
 
 -- Filter the proporties whose price is double of the average calculated on the previous query
@@ -296,3 +296,7 @@ from house_price_data;
 
 select * from house_price_data
 where price = (select max(price) from house_price_data) or price = (select min(price) from house_price_data);
+
+-- How many properties in our database were renovated
+select count(id) as renovated_count from house_price_data
+where renovated = 1;

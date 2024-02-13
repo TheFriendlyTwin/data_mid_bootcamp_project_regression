@@ -313,6 +313,10 @@ where grade = 13;
 select round(avg(price),0) average_price_property_grade13 from house_price_data
 where grade = 13;
 
+-- Which properties have the lowest grading
+select count(id) property_grade13_count from house_price_data
+where grade = 1;
+
 -- Which properties have the best condition possible
 select * from house_price_data h
 where h.condition = 5;
@@ -321,10 +325,23 @@ where h.condition = 5;
 select count(id) property_condition5_count from house_price_data h
 where h.condition = 5;
 
--- What is the average price for the properties with the highest grade possible
-select round(avg(price),0) average_price_property_grade13 from house_price_data h
+-- What is the average price for the properties with the best condition possible
+select round(avg(price),0) average_price_property_condition5 from house_price_data h
 where h.condition = 5;
+
+-- Which properties have the worst condition possible
+select * from house_price_data h
+where h.condition = 1;
+
+-- How many houses are there with the worst condition possible
+select count(id) property_condition1_count from house_price_data h
+where h.condition = 1;
+
+-- What is the average price for the properties with the worst condition possible
+select round(avg(price),0) average_price_property_condition1 from house_price_data h
+where h.condition = 1;
 
 -- How many properties have the highest grade and best condition possible
 select * from house_price_data h
 where grade = 13 and h.condition = 5;
+

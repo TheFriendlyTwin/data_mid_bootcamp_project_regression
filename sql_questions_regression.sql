@@ -235,19 +235,19 @@ limit 10, 1;
 
 /* Extra Questions*/
 
--- What is the average price grouped by zipcode (location)
+-- 1. What is the average price grouped by zipcode (location)
 select zipcode, round(avg(price),2) as average_price_location 
 from house_price_data
 group by zipcode
 order by average_price_location desc;
 
--- For each zipcode (location) get the max and min price
+-- 1.1 For each zipcode (location) get the max and min price
 select zipcode, max(price) max_price, min(price) min_price
 from house_price_data
 group by zipcode
 order by max_price desc;
 
--- What are the zipcodes (locations) with the highest and lowest average of prices
+-- 1.2 What are the zipcodes (locations) with the highest and lowest average of prices
 with avg_price_location as
 (
 	select zipcode, round(avg(price),2) as average_price_location 
@@ -261,23 +261,23 @@ where average_price_location = (select max(average_price_location) from avg_pric
 order by average_price_location desc;
 
 
--- What are the different cities where properties are available in your database? (distinct major cites)
+-- 2. What are the different cities where properties are available in your database? (distinct major cites)
 select distinct major_city from house_price_data;
 select count(distinct major_city) major_city_count from house_price_data;
 
--- What is the average price grouped by major city
+-- 2.1 What is the average price grouped by major city
 select major_city, round(avg(price),2) average_price_city from house_price_data
 group by major_city
 order by average_price_city desc;
 
 
--- For each major city get the max and min price
+-- 2.2 For each major city get the max and min price
 select major_city, max(price) max_price, min(price) min_price
 from house_price_data
 group by major_city
 order by max_price desc;
 
--- What are the major cities with the highest and lowest average of prices
+-- 2.3 What are the major cities with the highest and lowest average of prices
 with avg_price_city as
 (
 	select major_city, round(avg(price),2) as average_price_city 
@@ -290,58 +290,98 @@ where average_price_city = (select max(average_price_city) from avg_price_city) 
 		average_price_city = (select min(average_price_city) from avg_price_city)
 order by average_price_city desc;
 
--- What are the cheapeast and most expensive house in our database
+-- 3. What are the cheapeast and most expensive house in our database
 select max(price) max_price, min(price) min_price 
 from house_price_data;
 
 select * from house_price_data
 where price = (select max(price) from house_price_data) or price = (select min(price) from house_price_data);
 
--- How many properties in our database were renovated
+-- 4. How many properties in our database were renovated
 select count(id) as renovated_count from house_price_data
 where renovated = 1;
 
--- Which properties have the highest grading
+-- 5. Which properties have the highest grading
 select * from house_price_data
 where grade = 13;
 
--- How many houses were graded with the highest
+-- 5.1 How many houses were graded with the highest
 select count(id) property_grade13_count from house_price_data
 where grade = 13;
 
--- What is the average price for the properties with the highest grade possible
+-- 5.2 What is the average price for the properties with the highest grade possible
 select round(avg(price),0) average_price_property_grade13 from house_price_data
 where grade = 13;
 
--- Which properties have the lowest grading
+-- 5.3 Which properties have the lowest grading
 select count(id) property_grade13_count from house_price_data
 where grade = 1;
 
--- Which properties have the best condition possible
+-- 6. Which properties have the best condition possible
 select * from house_price_data h
 where h.condition = 5;
 
--- How many houses are there with the best condition possible
+-- 6.1 How many houses are there with the best condition possible
 select count(id) property_condition5_count from house_price_data h
 where h.condition = 5;
 
--- What is the average price for the properties with the best condition possible
+-- 6.2 What is the average price for the properties with the best condition possible
 select round(avg(price),0) average_price_property_condition5 from house_price_data h
 where h.condition = 5;
 
--- Which properties have the worst condition possible
+-- 6.3 Which properties have the worst condition possible
 select * from house_price_data h
 where h.condition = 1;
 
--- How many houses are there with the worst condition possible
+-- 6.4 How many houses are there with the worst condition possible
 select count(id) property_condition1_count from house_price_data h
 where h.condition = 1;
 
--- What is the average price for the properties with the worst condition possible
+-- 6.5 What is the average price for the properties with the worst condition possible
 select round(avg(price),0) average_price_property_condition1 from house_price_data h
 where h.condition = 1;
 
--- How many properties have the highest grade and best condition possible
+-- 7. How many properties have the highest grade and best condition possible
 select * from house_price_data h
 where grade = 13 and h.condition = 5;
 
+-- 8. What is the average condition for all properties
+select round(avg(h.condition),0) average_condition from house_price_data h;
+
+-- 8.1 What is the percentage of properties with condition higher than the average
+-- Calculate the count of rows that have condition higher than the average
+select count(*) as count_good_condition_properties from house_price_data h
+where h.condition > (select round(avg(h.condition),0) average_condition from house_price_data h);
+
+-- Step 1: Calculate the total count of properties in the table
+select count(*) as total_count from house_price_data h;
+
+-- Step 2: Calculate the percentage
+select round((count_good_condition_properties * 100) / total_count,0) as percentage
+from(
+	select count(*) as count_good_condition_properties from house_price_data h
+	where h.condition > (select round(avg(h.condition),0) average_condition from house_price_data h)
+) c,
+(	
+	select count(*) as total_count from house_price_data h
+)t;
+
+-- Step 3: What is the average cost for the properties with conditions higher than the average
+select round(avg(price),0) as average_price from house_price_data h
+where h.condition > (select round(avg(h.condition),0) average_condition from house_price_data h);
+
+-- 8.2. How much higher than the total average is that average price in percentage
+select round((average_price - average_total) / average_total * 100, 1) as percentage
+from(
+	select round(avg(price),0) as average_price from house_price_data h
+	where h.condition > (select round(avg(h.condition),0) average_condition from house_price_data h)
+) c,
+(
+	select round(avg(price),0) as average_total from house_price_data
+) t;
+
+-- 9. What property has the biggest sqftliving
+select max(sqft_living15) max_sqft_living15 from house_price_data;
+
+select * from house_price_data
+where sqft_living15 = (select max(sqft_living15) max_sqft_living15 from house_price_data);
